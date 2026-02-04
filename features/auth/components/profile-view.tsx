@@ -1,6 +1,12 @@
 'use client'
 
-import { ArrowLeft, LogOut, UserMinus, ChevronRight, Loader2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  LogOut,
+  UserMinus,
+  ChevronRight,
+  Loader2,
+} from 'lucide-react'
 import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
 import { useTransitionRouter } from 'next-view-transitions'

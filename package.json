@@ -10,7 +10,6 @@
     "dev:https-safe": "next dev --experimental-https",
     "build": "next build --turbo",
     "build-safe": "next build",
-    "postbuild": "next-sitemap --config next-sitemap.config.mjs",
     "start": "next start",
     "lint": "eslint . --concurrency=auto --cache --cache-location .eslintcache",
     "lint:fix": "eslint . --fix --concurrency=auto --cache --cache-location .eslintcache",
