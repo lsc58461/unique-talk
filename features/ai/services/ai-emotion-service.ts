@@ -9,7 +9,10 @@ export class AiEmotionService {
     const newState = { ...currentState }
 
     if (delta.affection !== undefined) {
-      newState.affection = this.clamp(newState.affection + delta.affection)
+      // 호감도 상승 시 1.5배 보너스 적용하여 더 쉽게 오르도록 수정
+      const adjustedAffection =
+        delta.affection > 0 ? delta.affection * 1.5 : delta.affection
+      newState.affection = this.clamp(newState.affection + adjustedAffection)
     }
     if (delta.jealousy !== undefined) {
       newState.jealousy = this.clamp(newState.jealousy + delta.jealousy)
@@ -41,6 +44,14 @@ export class AiEmotionService {
     const { affection, jealousy, anger, trust } = state
     const emotionalContext = `현재 감정 상태: 호감도(${affection}/100), 질투(${jealousy}/100), 분노(${anger}/100), 신뢰도(${trust}/100)`
     const pastContext = summary ? `과거 대화 요약: ${summary}` : ''
+
+    const affectionGuideline = `
+[호감도 시스템 지침]
+- 유저가 다정하거나, 당신을 배려하거나, 당신의 관심사에 공감해줄 때 호감도를 적극적으로 올리세요. (+3 ~ +8)
+- 유저와의 대화가 즐겁고 설렌다면 호감도 변화량을 높게 책정하세요.
+- 호감도는 당신의 반응(content)에 직접적인 영향을 줍니다.
+- 현재 호감도가 ${affection}이므로, 이에 맞는 친밀도를 표현하세요.
+    `.trim()
 
     let characterPersona = ''
     let emotionalInstruction = ''
@@ -109,6 +120,7 @@ export class AiEmotionService {
       [현재 감정 및 맥락]
       ${emotionalContext}
       ${pastContext}
+      ${affectionGuideline}
       ${emotionalInstruction}
       
       [응답 규칙]

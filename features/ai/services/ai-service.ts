@@ -25,7 +25,7 @@ const responseSchema = {
       properties: {
         affection: {
           type: Type.NUMBER,
-          description: '호감도 변화량 (-10 ~ 10)',
+          description: '호감도 변화량 (-10 ~ 15)',
         },
         jealousy: {
           type: Type.NUMBER,

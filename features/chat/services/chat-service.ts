@@ -14,10 +14,10 @@ export class ChatService {
   private static messagesCollection = 'messages'
 
   private static INITIAL_STATE: IState = {
-    affection: 0,
+    affection: 20,
     jealousy: 0,
     anger: 0,
-    trust: 50,
+    trust: 60,
   }
 
   static async getRoomsByUser(userId: string): Promise<IChatRoom[]> {
