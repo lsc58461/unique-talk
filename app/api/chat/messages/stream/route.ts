@@ -48,7 +48,7 @@ export async function POST(request: Request) {
             chatRoom.summary,
             chatRoom.name,
             chatRoom.gender,
-            chatRoom.isAdultMode || false,
+            chatRoom.isNSFW || false,
           )) {
             if (part.type === 'content') {
               // 텍스트 조각 전송 (SSE 포맷: data: <content>\n\n)

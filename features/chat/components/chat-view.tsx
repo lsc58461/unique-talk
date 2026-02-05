@@ -18,7 +18,7 @@ interface ChatViewProps {
   messages: IMessage[]
   onSendMessage: (content: string) => void
   onBack: () => void
-  onToggleAdultMode: () => void
+  onToggleNSFW: () => void
   isSending?: boolean
 }
 
@@ -61,7 +61,7 @@ export function ChatView({
   messages,
   onSendMessage,
   onBack,
-  onToggleAdultMode,
+  onToggleNSFW,
   isSending = false,
 }: ChatViewProps) {
   const [inputValue, setInputValue] = useState('')
@@ -139,20 +139,20 @@ export function ChatView({
         }
         right={
           <button
-            onClick={onToggleAdultMode}
-            className={cn(
-              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all',
-              room.isAdultMode
-                ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-            )}
             type="button"
+            onClick={onToggleNSFW}
+            className={cn(
+              'flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
+              room.isNSFW
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-gray-200 text-gray-600 hover:bg-gray-300',
+            )}
             aria-label="모드 전환"
           >
-            {room.isAdultMode ? (
+            {room.isNSFW ? (
               <>
                 <Lock className={cn('size-3')} />
-                <span>19금</span>
+                <span>NSFW</span>
               </>
             ) : (
               <>

@@ -247,43 +247,45 @@ export function useChat() {
       }
     } catch (error) {
       console.error('Failed to delete room:', error)
-      toast.error('오류가 발생했습니다. 다시 시도해주세요.')
+      toast.error('오류가 발생했습니다.')
     }
   }
 
-  const handleToggleAdultMode = async () => {
-    if (!selectedRoomId || !selectedRoom) return
+  const handleToggleNSFW = async () => {
+    if (!selectedRoom) return
+
+    const newMode = !selectedRoom.isNSFW
 
     try {
-      const newMode = !selectedRoom.isAdultMode
-      const res = await fetch('/api/chat/rooms/toggle-adult-mode', {
+      const response = await fetch('/api/chat/rooms/toggle-nsfw', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomId: selectedRoomId,
-          isAdultMode: newMode,
+          chatRoomId: selectedRoom._id,
+          isNSFW: newMode,
         }),
       })
 
-      if (res.ok) {
+      if (response.ok) {
         setRooms((prev) =>
           prev.map((r) =>
-            r._id?.toString() === selectedRoomId
-              ? { ...r, isAdultMode: newMode }
+            r._id?.toString() === selectedRoom._id?.toString()
+              ? { ...r, isNSFW: newMode }
               : r,
           ),
         )
+
         toast.success(
           newMode
-            ? '19금 모드로 전환되었습니다.'
-            : '일반 모드로 전환되었습니다.',
+            ? 'NSFW 모드가 활성화되었습니다'
+            : '일반 모드로 전환되었습니다',
         )
       } else {
-        toast.error('모드 전환에 실패했습니다.')
+        toast.error('모드 전환에 실패했습니다')
       }
     } catch (error) {
-      console.error('Failed to toggle adult mode:', error)
-      toast.error('오류가 발생했습니다.')
+      console.error('Failed to toggle NSFW mode:', error)
+      toast.error('오류가 발생했습니다')
     }
   }
 
@@ -300,6 +302,6 @@ export function useChat() {
     handleLogout,
     handleSendMessage,
     handleDeleteRoom,
-    handleToggleAdultMode,
+    handleToggleNSFW,
   }
 }

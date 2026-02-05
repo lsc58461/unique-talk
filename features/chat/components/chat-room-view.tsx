@@ -21,7 +21,7 @@ export function ChatRoomView() {
     isLoading,
     isSending,
     handleSendMessage,
-    handleToggleAdultMode,
+    handleToggleNSFW,
     user,
   } = useChat()
 
@@ -64,7 +64,7 @@ export function ChatRoomView() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onBack={() => router.push('/chat')}
-          onToggleAdultMode={handleToggleAdultMode}
+          onToggleNSFW={handleToggleNSFW}
           isSending={isSending}
         />
       )}

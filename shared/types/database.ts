@@ -43,7 +43,7 @@ export interface IChatRoom {
   bgColor: string // 테마 배경색 (Tailwind bg class)
   summary: string
   state: IState
-  isAdultMode: boolean // 19금 모드 여부
+  isNSFW: boolean // 19금 모드 여부
   lastMessage?: string
   updatedAt: Date
   deletedAt?: Date

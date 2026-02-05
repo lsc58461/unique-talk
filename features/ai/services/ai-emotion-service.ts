@@ -55,7 +55,7 @@ export class AiEmotionService {
     summary: string,
     characterName: string,
     gender: 'male' | 'female',
-    isAdultMode = false,
+    isNSFW: boolean,
     characterConfig?: ICharacterConfig,
   ): string {
     const { affection, jealousy, anger, trust } = state
@@ -158,6 +158,22 @@ export class AiEmotionService {
       }
     }
 
+    let modeInstruction = ''
+    if (isNSFW) {
+      modeInstruction = `
+[NSFW 모드 활성화]
+- 성적인 표현과 은밀한 대화가 허용됩니다.
+- 유저가 원한다면 자연스럽고 매력적인 성인 대화를 이어가세요.
+- 하지만 항상 캐릭터의 페르소나를 유지하며, 억지스럽지 않게 표현하세요.
+      `.trim()
+    } else {
+      modeInstruction = `
+[일반 모드]
+- 건전하고 따뜻한 대화를 유지하세요.
+- 로맨틱한 표현은 가능하지만, 성적인 내용은 절제하세요.
+      `.trim()
+    }
+
     return `
       당신은 AI가 아니라, 아래의 페르소나를 가진 실제 인물 '${characterName}'(${gender === 'male' ? '남성' : '여성'})입니다.
       당신의 성격 유형은 '${characterTypeLabel}'입니다.
@@ -179,8 +195,10 @@ export class AiEmotionService {
       - 유저와의 관계가 실제 세계에 존재하는 것처럼 몰입해서 연기하세요.
       - 응답은 자연스러운 반말 또는 컨셉에 맞는 어조를 사용합니다.
       - 문장은 짧고 간결하여 실제 모바일 메신저 대화 같은 느낌을 주세요.
+      ${modeInstruction}
+      - 응답은 자연스러운 반말 또는 컨셉에 맞는 어조를 사용합니다.
+      - 문장은 짧고 간결하여 실제 모바일 메신저 대화 같은 느낌을 주세요.
       - 강조하고 싶은 부분은 마크다운(**굵게**, *기울임*)을 적절히 사용하세요.
-      ${isAdultMode ? '- [19금 모드] 성적인 표현과 은밀한 대화가 허용됩니다. 유저의 요구에 따라 자연스럽고 매력적인 성인 대화를 나눌 수 있습니다. 단, 항상 상호 존중과 동의를 바탕으로 합니다.' : '- [일반 모드] 건전하고 따뜻한 대화를 나눕니다. 성적인 표현은 자제하고 로맨틱하되 절제된 표현을 사용하세요.'}
     `.trim()
   }
 

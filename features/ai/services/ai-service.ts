@@ -53,7 +53,7 @@ export class AiService {
     summary: string,
     characterName: string,
     gender: 'male' | 'female',
-    isAdultMode = false,
+    isNSFW = false,
   ): AsyncGenerator<{ type: 'content' | 'data'; value: any }> {
     const adminConfig = await AdminService.getConfig()
     const characterConfigs = await AdminService.getCharacterConfigs()
@@ -67,7 +67,7 @@ export class AiService {
       summary,
       characterName,
       gender,
-      isAdultMode,
+      isNSFW,
       characterConfig,
     )
 
@@ -188,7 +188,7 @@ ${systemPrompt}`,
     summary: string,
     characterName: string,
     gender: 'male' | 'female',
-    isAdultMode = false,
+    isNSFW = false,
   ): Promise<{
     content: string
     stateDelta: Partial<IState>
@@ -207,7 +207,7 @@ ${systemPrompt}`,
       summary,
       characterName,
       gender,
-      isAdultMode,
+      isNSFW,
       characterConfig,
     )
 

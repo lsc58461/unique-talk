@@ -77,6 +77,7 @@ export class ChatService {
       bgColor,
       summary: '',
       state: initialState,
+      isNSFW: false,
       updatedAt: new Date(),
     }
 

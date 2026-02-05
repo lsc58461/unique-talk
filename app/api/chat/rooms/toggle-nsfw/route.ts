@@ -5,11 +5,11 @@ import { getDb } from '@/shared/lib/mongodb'
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { roomId, isAdultMode } = await req.json()
+    const { chatRoomId, isNSFW } = await req.json()
 
-    if (!roomId || typeof isAdultMode !== 'boolean') {
+    if (!chatRoomId || typeof isNSFW !== 'boolean') {
       return NextResponse.json(
-        { error: 'roomId와 isAdultMode가 필요합니다.' },
+        { error: 'chatRoomId와 isNSFW가 필요합니다.' },
         { status: 400 },
       )
     }
@@ -18,8 +18,8 @@ export async function PATCH(req: NextRequest) {
     const roomsCollection = db.collection('chatRooms')
 
     const result = await roomsCollection.updateOne(
-      { _id: new ObjectId(roomId) },
-      { $set: { isAdultMode, updatedAt: new Date() } },
+      { _id: new ObjectId(chatRoomId) },
+      { $set: { isNSFW, updatedAt: new Date() } },
     )
 
     if (result.matchedCount === 0) {
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Toggle adult mode error:', error)
+    console.error('Toggle NSFW mode error:', error)
     return NextResponse.json(
       { error: '모드 전환 중 오류가 발생했습니다.' },
       { status: 500 },
