@@ -626,6 +626,16 @@ export class AdminService {
     return { ...newChangelog, _id: result.insertedId }
   }
 
+  static async updateChangelog(
+    id: string,
+    changelog: Partial<Omit<IChangelog, '_id' | 'createdAt'>>,
+  ): Promise<void> {
+    const db = await getDb()
+    await db
+      .collection<IChangelog>(this.changelogCollection)
+      .updateOne({ _id: new ObjectId(id) }, { $set: changelog })
+  }
+
   static async deleteChangelog(id: string): Promise<void> {
     const db = await getDb()
     await db

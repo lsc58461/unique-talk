@@ -17,17 +17,41 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { title, content } = await request.json()
+    const { title, content, type } = await request.json()
     if (!title || !content) {
       return NextResponse.json(
         { error: 'Title and content are required' },
         { status: 400 },
       )
     }
-    const changelog = await AdminService.createChangelog({ title, content })
+    const changelog = await AdminService.createChangelog({
+      title,
+      content,
+      type,
+    })
     return NextResponse.json(changelog)
   } catch (error) {
     console.error('Failed to create changelog:', error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 },
+    )
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const { id, title, content, type } = await request.json()
+    if (!id || !title || !content) {
+      return NextResponse.json(
+        { error: 'ID, title and content are required' },
+        { status: 400 },
+      )
+    }
+    await AdminService.updateChangelog(id, { title, content, type })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Failed to update changelog:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 },

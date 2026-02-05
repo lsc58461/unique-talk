@@ -71,6 +71,7 @@ export interface IChangelog {
   _id?: ObjectId
   title: string
   content: string
+  type?: 'feature' | 'improvement' | 'bugfix'
   createdAt: Date
 }
 
