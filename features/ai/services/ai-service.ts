@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai'
 
+import { AdminService } from '@/features/admin/services/admin-service'
 import { IMessage, IState } from '@/shared/types/database'
 
 import { AiEmotionService } from './ai-emotion-service'
@@ -42,6 +43,142 @@ const responseSchema = {
 
 export class AiService {
   /**
+   * 유저 메시지에 대한 AI 응답을 스트리밍으로 생성합니다.
+   */
+  /* eslint-disable no-restricted-syntax */
+  static async *generateResponseStream(
+    characterType: string,
+    history: IMessage[],
+    currentState: IState,
+    summary: string,
+    characterName: string,
+    gender: 'male' | 'female',
+    isAdultMode = false,
+  ): AsyncGenerator<{ type: 'content' | 'data'; value: any }> {
+    const adminConfig = await AdminService.getConfig()
+    const characterConfigs = await AdminService.getCharacterConfigs()
+    const characterConfig = characterConfigs.find(
+      (c) => c.type === characterType,
+    )
+
+    const systemPrompt = AiEmotionService.getSystemPrompt(
+      characterType,
+      currentState,
+      summary,
+      characterName,
+      gender,
+      isAdultMode,
+      characterConfig,
+    )
+
+    try {
+      const userMessage = history[history.length - 1]
+      const chatHistory = history.slice(0, -1)
+
+      const result = await client.models.generateContentStream({
+        model: adminConfig.aiModel || 'gemini-1.5-flash-latest',
+        contents: [
+          ...chatHistory.map((msg) => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }],
+          })),
+          { role: 'user', parts: [{ text: userMessage.content }] },
+        ],
+        config: {
+          systemInstruction: {
+            role: 'system',
+            parts: [
+              {
+                text: `당신은 유저와 대화하는 캐릭터입니다. 아래의 페르소나와 현재 상황에 맞춰 응답하세요.
+답변은 반드시 JSON 형식이어야 하며, content(대화 내용)와 stateDelta(감정 변화량)를 포함해야 합니다.
+
+${systemPrompt}`,
+              },
+            ],
+          },
+          responseMimeType: 'application/json',
+          responseSchema: responseSchema as any,
+          maxOutputTokens: 1000,
+          temperature: 0.9,
+        },
+      })
+
+      let fullText = ''
+      let lastSentContent = ''
+      // @ts-ignore - AsyncGenerator type mismatch in some environments
+      for await (const chunk of result) {
+        const chunkText = chunk.text ?? ''
+        fullText += chunkText
+
+        try {
+          const contentMatch = fullText.match(
+            /"content"\s*:\s*"((?:[^"\\]|\\.)*)/,
+          )
+          if (contentMatch && contentMatch[1]) {
+            const currentContent = contentMatch[1]
+              .replace(/\\n/g, '\n')
+              .replace(/\\"/g, '"')
+            const delta = currentContent.slice(lastSentContent.length)
+
+            if (delta) {
+              yield { type: 'content', value: delta }
+              lastSentContent = currentContent
+            }
+          }
+        } catch {
+          // 파싱 실패 시 무시
+        }
+      }
+
+      // 최종 파싱
+      try {
+        const parsedData = JSON.parse(fullText)
+        const content = parsedData.content || ''
+        const stateDelta = parsedData.stateDelta || {
+          affection: 1,
+          jealousy: 0,
+          anger: 0,
+          trust: 0,
+        }
+        const summaryUpdate = `${summary} ${content.slice(0, 30)}...`.slice(
+          -200,
+        )
+
+        yield {
+          type: 'data',
+          value: {
+            content,
+            stateDelta,
+            summaryUpdate,
+          },
+        }
+      } catch (error) {
+        console.error(
+          'Failed to parse final AI response as JSON:',
+          fullText,
+          error,
+        )
+        throw new Error('Invalid AI response format')
+      }
+    } catch (error: any) {
+      console.error('Gemini Stream Error:', error)
+      yield {
+        type: 'content',
+        value: '미안해, 지금 잠시 머리가 아파서... 나중에 다시 얘기하자. 😢',
+      }
+      yield {
+        type: 'data',
+        value: {
+          content:
+            '미안해, 지금 잠시 머리가 아파서... 나중에 다시 얘기하자. 😢',
+          stateDelta: {},
+          summaryUpdate: summary,
+        },
+      }
+    }
+  }
+
+  /**
    * 유저 메시지에 대한 AI 응답을 생성합니다.
    */
   static async generateResponse(
@@ -51,11 +188,18 @@ export class AiService {
     summary: string,
     characterName: string,
     gender: 'male' | 'female',
+    isAdultMode = false,
   ): Promise<{
     content: string
     stateDelta: Partial<IState>
     summaryUpdate: string
   }> {
+    const adminConfig = await AdminService.getConfig()
+    const characterConfigs = await AdminService.getCharacterConfigs()
+    const characterConfig = characterConfigs.find(
+      (c) => c.type === characterType,
+    )
+
     // 1. 시스템 프롬프트 생성 (페르소나 + 현재 감정 반영)
     const systemPrompt = AiEmotionService.getSystemPrompt(
       characterType,
@@ -63,6 +207,8 @@ export class AiService {
       summary,
       characterName,
       gender,
+      isAdultMode,
+      characterConfig,
     )
 
     try {
@@ -72,7 +218,7 @@ export class AiService {
 
       // 2. Gemini API 호출
       const response = await client.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: adminConfig.aiModel || 'gemini-3-flash-preview',
         contents: [
           ...chatHistory.map((msg) => ({
             role: msg.role === 'user' ? 'user' : 'model',

@@ -91,7 +91,7 @@ export function useChat() {
     setMessages((prev) => [...prev, tempUserMsg])
 
     try {
-      const res = await fetch('/api/chat/messages', {
+      const res = await fetch('/api/chat/messages/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,74 +101,124 @@ export function useChat() {
         }),
       })
 
-      if (res.ok) {
-        const { message, state, userMessageDelta } = await res.json()
+      if (!res.ok) {
+        throw new Error('Streaming failed')
+      }
 
-        // 상태 변화 체크 및 통합 토스트 표시
-        if (selectedRoom?.state && state) {
-          const { affection, jealousy, trust } = selectedRoom.state
-          const changes = []
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error('No reader')
 
-          // 호감도 변화
-          if (state.affection > affection)
-            changes.push(`💖 호감도 +${state.affection - affection}`)
-          else if (state.affection < affection)
-            changes.push(`💔 호감도 ${state.affection - affection}`)
+      const decoder = new TextDecoder()
+      let fullContent = ''
+      let buffer = ''
 
-          // 질투 변화
-          if (state.jealousy > jealousy)
-            changes.push(`⚡ 질투 +${state.jealousy - jealousy}`)
-          else if (state.jealousy < jealousy)
-            changes.push(`🍃 질투 ${state.jealousy - jealousy}`)
+      /* eslint-disable no-await-in-loop, no-restricted-syntax */
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-          // 신뢰 변화
-          if (state.trust > trust)
-            changes.push(`🛡️ 신뢰 +${state.trust - trust}`)
-          else if (state.trust < trust)
-            changes.push(`⚠️ 신뢰 ${state.trust - trust}`)
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-          if (changes.length > 0) {
-            const isPositive =
-              state.affection >= affection &&
-              state.trust >= trust &&
-              state.jealousy <= jealousy
-            const toastFn = isPositive ? toast.success : toast.info
+        for (const line of lines) {
+          if (line.trim().startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.trim().slice(6))
 
-            toastFn(`${selectedRoom.name}님의 감정이 변화했습니다`, {
-              description: changes.join(' | '),
-            })
+              if (data.content) {
+                fullContent += data.content
+                const currentContent = fullContent
+                setMessages((prev) => {
+                  const last = prev[prev.length - 1]
+                  if (last && last.role === 'assistant' && !last._id) {
+                    return [
+                      ...prev.slice(0, -1),
+                      { ...last, content: currentContent },
+                    ]
+                  }
+                  // 첫 번째 청크일 때 어시스턴트 메시지 생성
+                  return [
+                    ...prev,
+                    {
+                      chatRoomId: selectedRoomId as any,
+                      role: 'assistant',
+                      content: currentContent,
+                      createdAt: new Date(),
+                    },
+                  ]
+                })
+              }
+
+              if (data.done) {
+                const { message, state, userMessageDelta } = data
+
+                // 감정 변화 토스트 표시
+                if (selectedRoom?.state && state) {
+                  const { affection, jealousy, trust } = selectedRoom.state
+                  const changes = []
+
+                  if (state.affection > affection)
+                    changes.push(`💖 호감도 +${state.affection - affection}`)
+                  else if (state.affection < affection)
+                    changes.push(`💔 호감도 ${state.affection - affection}`)
+
+                  if (state.jealousy > jealousy)
+                    changes.push(`⚡ 질투 +${state.jealousy - jealousy}`)
+                  else if (state.jealousy < jealousy)
+                    changes.push(`🍃 질투 ${state.jealousy - jealousy}`)
+
+                  if (state.trust > trust)
+                    changes.push(`🛡️ 신뢰 +${state.trust - trust}`)
+                  else if (state.trust < trust)
+                    changes.push(`⚠️ 신뢰 ${state.trust - trust}`)
+
+                  if (changes.length > 0) {
+                    const isPositive =
+                      state.affection >= affection &&
+                      state.trust >= trust &&
+                      state.jealousy <= jealousy
+                    const toastFn = isPositive ? toast.success : toast.info
+
+                    toastFn(`${selectedRoom.name}님의 감정이 변화했습니다`, {
+                      description: changes.join(' | '),
+                    })
+                  }
+                }
+
+                // 최종 메시지 및 상태 업데이트
+                setMessages((prev) => {
+                  // 유저 메시지 업데이트 (delta)
+                  const updated = prev.map((msg) =>
+                    msg === tempUserMsg
+                      ? { ...msg, stateDelta: userMessageDelta }
+                      : msg,
+                  )
+                  // AI 메시지 최종 업데이트 (ID 등 포함)
+                  return [...updated.slice(0, -1), message]
+                })
+
+                setRooms((prev) =>
+                  prev.map((r) =>
+                    r._id?.toString() === selectedRoomId
+                      ? {
+                          ...r,
+                          state,
+                          lastMessage: message.content,
+                          updatedAt: new Date(),
+                        }
+                      : r,
+                  ),
+                )
+              }
+            } catch (e) {
+              console.error('Error parsing stream chunk:', e)
+            }
           }
         }
-
-        // 유저 메시지 업데이트 (delta 추가)
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg === tempUserMsg
-              ? { ...msg, stateDelta: userMessageDelta }
-              : msg,
-          ),
-        )
-
-        // AI 메시지 추가
-        setMessages((prev) => [...prev, message])
-
-        setRooms((prev) =>
-          prev.map((r) =>
-            r._id?.toString() === selectedRoomId
-              ? {
-                  ...r,
-                  state,
-                  lastMessage: message.content,
-                  updatedAt: new Date(),
-                }
-              : r,
-          ),
-        )
-      } else {
-        toast.error('메시지 전송에 실패했습니다.')
       }
     } catch (error) {
-      console.error('Failed to send message:', error)
+      console.error('Failed to stream message:', error)
       toast.error('오류가 발생했습니다.')
     } finally {
       setIsSending(false)
@@ -201,6 +251,42 @@ export function useChat() {
     }
   }
 
+  const handleToggleAdultMode = async () => {
+    if (!selectedRoomId || !selectedRoom) return
+
+    try {
+      const newMode = !selectedRoom.isAdultMode
+      const res = await fetch('/api/chat/rooms/toggle-adult-mode', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId: selectedRoomId,
+          isAdultMode: newMode,
+        }),
+      })
+
+      if (res.ok) {
+        setRooms((prev) =>
+          prev.map((r) =>
+            r._id?.toString() === selectedRoomId
+              ? { ...r, isAdultMode: newMode }
+              : r,
+          ),
+        )
+        toast.success(
+          newMode
+            ? '19금 모드로 전환되었습니다.'
+            : '일반 모드로 전환되었습니다.',
+        )
+      } else {
+        toast.error('모드 전환에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('Failed to toggle adult mode:', error)
+      toast.error('오류가 발생했습니다.')
+    }
+  }
+
   return {
     user,
     status,
@@ -214,5 +300,6 @@ export function useChat() {
     handleLogout,
     handleSendMessage,
     handleDeleteRoom,
+    handleToggleAdultMode,
   }
 }

@@ -35,7 +35,12 @@ export default function RootLayout({
           className={cn('antialiased', geistSans.variable, geistMono.variable)}
         >
           <AuthProvider>{children}</AuthProvider>
-          <Toaster position="top-center" richColors />
+          <Toaster
+            position="top-center"
+            richColors
+            duration={800}
+            closeButton
+          />
         </body>
       </html>
     </ViewTransitions>

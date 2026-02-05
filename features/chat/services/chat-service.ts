@@ -6,7 +6,9 @@ import {
   IMessage,
   CharacterType,
   IState,
+  ICharacterConfig,
 } from '@/shared/types/database'
+import { CryptoUtil } from '@/shared/utils/crypto-util'
 
 export class ChatService {
   private static roomsCollection = 'chatRooms'
@@ -22,7 +24,7 @@ export class ChatService {
 
   static async getRoomsByUser(userId: string): Promise<IChatRoom[]> {
     const db = await getDb()
-    return db
+    const rooms = await db
       .collection<IChatRoom>(this.roomsCollection)
       .find({
         userId: new ObjectId(userId),
@@ -30,6 +32,14 @@ export class ChatService {
       })
       .sort({ updatedAt: -1 })
       .toArray()
+
+    return rooms.map((room) => ({
+      ...room,
+      lastMessage: room.lastMessage
+        ? CryptoUtil.decrypt(room.lastMessage)
+        : room.lastMessage,
+      summary: room.summary ? CryptoUtil.decrypt(room.summary) : room.summary,
+    }))
   }
 
   static async createRoom(
@@ -42,6 +52,21 @@ export class ChatService {
     bgColor: string,
   ): Promise<IChatRoom> {
     const db = await getDb()
+
+    // 관리자 설정에서 해당 캐릭터의 초기 스탯 가져오기
+    const charConfig = await db
+      .collection<ICharacterConfig>('characterConfigs')
+      .findOne({ type: characterType })
+
+    const initialState: IState = charConfig
+      ? {
+          affection: charConfig.baseAffection,
+          jealousy: charConfig.baseJealousy,
+          anger: 0,
+          trust: charConfig.baseTrust,
+        }
+      : { ...this.INITIAL_STATE }
+
     const newRoom: IChatRoom = {
       userId: new ObjectId(userId),
       characterType,
@@ -51,7 +76,7 @@ export class ChatService {
       color,
       bgColor,
       summary: '',
-      state: { ...this.INITIAL_STATE },
+      state: initialState,
       updatedAt: new Date(),
     }
 
@@ -66,12 +91,17 @@ export class ChatService {
     limit = 20,
   ): Promise<IMessage[]> {
     const db = await getDb()
-    return db
+    const messages = await db
       .collection<IMessage>(this.messagesCollection)
       .find({ chatRoomId: new ObjectId(chatRoomId) })
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray()
+
+    return messages.map((msg) => ({
+      ...msg,
+      content: CryptoUtil.decrypt(msg.content),
+    }))
   }
 
   static async addMessage(
@@ -81,10 +111,11 @@ export class ChatService {
     stateDelta?: Partial<IState>,
   ): Promise<IMessage> {
     const db = await getDb()
+    const encryptedContent = CryptoUtil.encrypt(content)
     const newMessage: IMessage = {
       chatRoomId: new ObjectId(chatRoomId),
       role,
-      content,
+      content: encryptedContent,
       createdAt: new Date(),
       stateDelta,
     }
@@ -98,13 +129,13 @@ export class ChatService {
       { _id: new ObjectId(chatRoomId) },
       {
         $set: {
-          lastMessage: content,
+          lastMessage: encryptedContent,
           updatedAt: new Date(),
         },
       },
     )
 
-    return { ...newMessage, _id: result.insertedId }
+    return { ...newMessage, _id: result.insertedId, content }
   }
 
   static async updateRoomStateAndSummary(
@@ -113,12 +144,13 @@ export class ChatService {
     summary: string,
   ): Promise<void> {
     const db = await getDb()
+    const encryptedSummary = CryptoUtil.encrypt(summary)
     await db.collection<IChatRoom>(this.roomsCollection).updateOne(
       { _id: new ObjectId(chatRoomId) },
       {
         $set: {
           state,
-          summary,
+          summary: encryptedSummary,
           updatedAt: new Date(),
         },
       },

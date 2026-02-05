@@ -4,123 +4,52 @@ import { ArrowLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { useTransitionRouter } from 'next-view-transitions'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 
 import { CharacterNameInputModal } from '@/features/chat/components/character-name-input-modal'
 import { Header } from '@/shared/components/header/header'
 import { PageLayout } from '@/shared/components/layout/page-layout'
 import { useModal } from '@/shared/hooks/use-modal'
-import { CharacterType } from '@/shared/types/database'
+import { ICharacterConfig } from '@/shared/types/database'
 import { cn } from '@/shared/utils/cn'
 
 type Gender = 'male' | 'female'
-
-const CHARACTERS: {
-  type: CharacterType
-  gender: Gender
-  title: string
-  description: string
-  imageUrl: string
-  color: string
-  bgColor: string
-  borderColor: string
-}[] = [
-  // Female Characters
-  {
-    type: 'obsessive',
-    gender: 'female',
-    title: '집착하는 여친',
-    description: '당신의 모든 일상을 소유하고 싶어 하는 그녀',
-    imageUrl:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-    color: '#9333ea', // purple-600
-    bgColor: '#a855f7', // purple-500
-    borderColor: '#f3e8ff', // purple-100
-  },
-  {
-    type: 'tsundere',
-    gender: 'female',
-    title: '츤데레 여친',
-    description: '겉으론 차갑지만 속으론 누구보다 당신을 생각하는 그녀',
-    imageUrl:
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=200&auto=format&fit=crop',
-    color: '#ca8a04', // yellow-600
-    bgColor: '#fefce8', // yellow-50
-    borderColor: '#fef9c3', // yellow-100
-  },
-  {
-    type: 'pure',
-    gender: 'female',
-    title: '순정파 여친',
-    description: '맑고 투명한 마음으로 당신만을 바라보는 그녀',
-    imageUrl:
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=200&auto=format&fit=crop',
-    color: '#db2777', // pink-600
-    bgColor: '#fdf2f8', // pink-50
-    borderColor: '#fce7f3', // pink-100
-  },
-  {
-    type: 'makjang',
-    gender: 'female',
-    title: '막장 드라마 여주',
-    description: '감정 기복이 심하고 드라마틱한 관계를 즐기는 그녀',
-    imageUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-    color: '#dc2626', // red-600
-    bgColor: '#fef2f2', // red-50
-    borderColor: '#fee2e2', // red-100
-  },
-  // Male Characters
-  {
-    type: 'younger_powerful',
-    gender: 'male',
-    title: '박력연하남',
-    description: '나이는 어려도 리드는 확실하게, 직진하는 그',
-    imageUrl:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
-    color: '#ea580c', // orange-600
-    bgColor: '#fff7ed', // orange-50
-    borderColor: '#ffedd5', // orange-100
-  },
-  {
-    type: 'younger_cute',
-    gender: 'male',
-    title: '큐티연하남',
-    description: '강아지 같은 눈망울로 당신의 사랑을 갈구하는 그',
-    imageUrl:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
-    color: '#0891b2', // cyan-600
-    bgColor: '#ecfeff', // cyan-50
-    borderColor: '#cffafe', // cyan-100
-  },
-  {
-    type: 'older_sexy',
-    gender: 'male',
-    title: '섹시연상남',
-    description: '여유로운 미소 뒤에 치명적인 매력을 숨긴 그',
-    imageUrl:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    color: '#4f46e5', // indigo-600
-    bgColor: '#eef2ff', // indigo-50
-    borderColor: '#e0e7ff', // indigo-100
-  },
-]
 
 export function CharacterSelectView() {
   const router = useTransitionRouter()
   const { data: session } = useSession()
   const [selectedGender, setSelectedGender] = useState<Gender>('female')
-  const [selectedCharacter, setSelectedCharacter] = useState<
-    (typeof CHARACTERS)[0] | null
-  >(null)
+  const [characters, setCharacters] = useState<ICharacterConfig[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedCharacter, setSelectedCharacter] =
+    useState<ICharacterConfig | null>(null)
   const { isModalOpen, openModal, closeModal } = useModal()
 
-  const filteredCharacters = CHARACTERS.filter(
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        const res = await fetch('/api/characters')
+        if (res.ok) {
+          const data = await res.json()
+          setCharacters(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch characters:', error)
+        toast.error('캐릭터 목록을 불러오는 중 오류가 발생했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCharacters()
+  }, [])
+
+  const filteredCharacters = characters.filter(
     (char) => char.gender === selectedGender,
   )
 
-  const handleCharacterSelect = (char: (typeof CHARACTERS)[0]) => {
+  const handleCharacterSelect = (char: ICharacterConfig) => {
     setSelectedCharacter(char)
     openModal()
   }
@@ -210,39 +139,53 @@ export function CharacterSelectView() {
           대화하고 싶은 캐릭터 유형을 선택해주세요.
         </p>
 
-        {filteredCharacters.map((char) => (
-          <button
-            key={char.type}
-            type="button"
-            onClick={() => handleCharacterSelect(char)}
-            className={cn(
-              'flex items-center gap-4 rounded-2xl border-2 bg-white p-5 transition-all hover:shadow-md active:scale-[0.98]',
-            )}
-            style={{ borderColor: char.borderColor }}
-          >
-            <div
+        {isLoading ? (
+          <div className={cn('flex flex-1 items-center justify-center')}>
+            <p className={cn('text-gray-400')}>캐릭터 정보를 불러오는 중...</p>
+          </div>
+        ) : (
+          filteredCharacters.map((char) => (
+            <button
+              key={char.type}
+              type="button"
+              onClick={() => handleCharacterSelect(char)}
               className={cn(
-                'relative flex size-14 items-center justify-center overflow-hidden rounded-2xl bg-gray-50 shadow-sm',
+                'flex items-center gap-4 rounded-2xl border-2 bg-white p-5 transition-all hover:shadow-md active:scale-[0.98]',
               )}
+              style={{ borderColor: `${char.color}20` }}
             >
-              <Image
-                src={char.imageUrl}
-                alt={char.title}
-                fill
-                className={cn('object-cover')}
-              />
-            </div>
-            <div className={cn('flex-1 text-left')}>
-              <h3 className={cn('text-lg font-bold text-gray-800')}>
-                {char.title}
-              </h3>
-              <p className={cn('mt-0.5 text-xs leading-relaxed text-gray-500')}>
-                {char.description}
-              </p>
-            </div>
-            <ChevronRight className={cn('size-5 text-gray-300')} />
-          </button>
-        ))}
+              <div
+                className={cn(
+                  'relative flex size-14 items-center justify-center overflow-hidden rounded-2xl bg-gray-50 shadow-sm',
+                )}
+              >
+                <Image
+                  src={char.imageUrl}
+                  alt={char.title}
+                  fill
+                  className={cn('object-cover')}
+                />
+              </div>
+              <div className={cn('flex-1 text-left')}>
+                <h3 className={cn('text-lg font-bold text-gray-800')}>
+                  {char.title}
+                </h3>
+                <p
+                  className={cn('mt-0.5 text-xs leading-relaxed text-gray-500')}
+                >
+                  {char.description}
+                </p>
+              </div>
+              <ChevronRight className={cn('size-5 text-gray-300')} />
+            </button>
+          ))
+        )}
+
+        {!isLoading && filteredCharacters.length === 0 && (
+          <div className={cn('py-20 text-center text-gray-400')}>
+            해당 성별의 캐릭터가 없습니다.
+          </div>
+        )}
       </div>
 
       <CharacterNameInputModal

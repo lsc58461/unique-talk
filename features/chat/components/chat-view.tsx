@@ -1,10 +1,13 @@
 'use client'
 
 import dayjs from 'dayjs'
-import { Send, ArrowLeft, Heart, Shield, Zap } from 'lucide-react'
+import { Send, ArrowLeft, Heart, Shield, Zap, Lock, Unlock } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
+import remarkGfm from 'remark-gfm'
 
 import { Header } from '@/shared/components/header/header'
 import { IChatRoom, IMessage, IState } from '@/shared/types/database'
@@ -15,6 +18,7 @@ interface ChatViewProps {
   messages: IMessage[]
   onSendMessage: (content: string) => void
   onBack: () => void
+  onToggleAdultMode: () => void
   isSending?: boolean
 }
 
@@ -37,7 +41,7 @@ function GaugeBar({ label, value, color, icon: GaugeIcon }: GaugeBarProps) {
           <span>{label}</span>
         </div>
         <span className={cn('text-[10px] font-medium text-gray-400')}>
-          {value}%
+          {value.toFixed(2)}%
         </span>
       </div>
       <div
@@ -57,6 +61,7 @@ export function ChatView({
   messages,
   onSendMessage,
   onBack,
+  onToggleAdultMode,
   isSending = false,
 }: ChatViewProps) {
   const [inputValue, setInputValue] = useState('')
@@ -131,6 +136,31 @@ export function ChatView({
               <Header.Title>{room.name}</Header.Title>
             </div>
           </div>
+        }
+        right={
+          <button
+            onClick={onToggleAdultMode}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all',
+              room.isAdultMode
+                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+            )}
+            type="button"
+            aria-label="모드 전환"
+          >
+            {room.isAdultMode ? (
+              <>
+                <Lock className={cn('size-3')} />
+                <span>19금</span>
+              </>
+            ) : (
+              <>
+                <Unlock className={cn('size-3')} />
+                <span>일반</span>
+              </>
+            )}
+          </button>
         }
         bottom={
           <div
@@ -245,7 +275,16 @@ export function ChatView({
                             : undefined,
                         }}
                       >
-                        {msg.content}
+                        {isAssistant ? (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeHighlight]}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        ) : (
+                          msg.content
+                        )}
                       </div>
                       <span
                         className={cn(
@@ -319,37 +358,40 @@ export function ChatView({
             )
           })}
 
-          {isSending && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn('flex justify-start')}
-            >
-              <div
-                className={cn(
-                  'rounded-2xl rounded-tl-none border border-gray-100 bg-white px-4 py-3 shadow-sm',
-                )}
+          {isSending &&
+            (!messages.length ||
+              messages[messages.length - 1].role !== 'assistant' ||
+              !messages[messages.length - 1].content) && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn('flex justify-start')}
               >
-                <div className={cn('flex gap-1')}>
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                    className={cn('size-1.5 rounded-full bg-gray-300')}
-                  />
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                    className={cn('size-1.5 rounded-full bg-gray-300')}
-                  />
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                    className={cn('size-1.5 rounded-full bg-gray-300')}
-                  />
+                <div
+                  className={cn(
+                    'rounded-2xl rounded-tl-none border border-gray-100 bg-white px-4 py-3 shadow-sm',
+                  )}
+                >
+                  <div className={cn('flex gap-1')}>
+                    <motion.span
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                      className={cn('size-1.5 rounded-full bg-gray-300')}
+                    />
+                    <motion.span
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                      className={cn('size-1.5 rounded-full bg-gray-300')}
+                    />
+                    <motion.span
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                      className={cn('size-1.5 rounded-full bg-gray-300')}
+                    />
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
           <div ref={messagesEndRef} />
         </div>
       </div>

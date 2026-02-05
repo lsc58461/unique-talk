@@ -98,7 +98,7 @@ export function ChatRoomList({
                     style={{ color: room.color }}
                   />
                   <span style={{ color: room.color }}>
-                    {room.state.affection}
+                    {room.state.affection.toFixed(2)}%
                   </span>
                 </div>
                 <div
@@ -107,7 +107,7 @@ export function ChatRoomList({
                   )}
                 >
                   <Zap className={cn('size-2.5')} />
-                  <span>{room.state.jealousy}</span>
+                  <span>{room.state.jealousy.toFixed(2)}%</span>
                 </div>
                 <div
                   className={cn(
@@ -115,7 +115,7 @@ export function ChatRoomList({
                   )}
                 >
                   <Shield className={cn('size-2.5')} />
-                  <span>{room.state.trust}</span>
+                  <span>{room.state.trust.toFixed(2)}%</span>
                 </div>
               </div>
             </div>

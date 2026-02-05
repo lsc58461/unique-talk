@@ -8,6 +8,14 @@ export type CharacterType =
   | 'younger_powerful'
   | 'younger_cute'
   | 'older_sexy'
+  | 'cold_charisma'
+  | 'playful_tease'
+  | 'gentle_caring'
+  | 'mysterious_dark'
+  | 'energetic_bright'
+  | 'strong_leader'
+  | 'shy_pure'
+  | 'humorous_fun'
 
 export interface IState {
   affection: number
@@ -21,6 +29,7 @@ export interface IUser {
   name?: string | null
   email?: string | null
   image?: string | null
+  role?: 'user' | 'admin'
 }
 
 export interface IChatRoom {
@@ -34,6 +43,7 @@ export interface IChatRoom {
   bgColor: string // 테마 배경색 (Tailwind bg class)
   summary: string
   state: IState
+  isAdultMode: boolean // 19금 모드 여부
   lastMessage?: string
   updatedAt: Date
   deletedAt?: Date
@@ -46,4 +56,37 @@ export interface IMessage {
   content: string
   createdAt: Date
   stateDelta?: Partial<IState> // 이전 상태와의 차이값 저장
+}
+
+export interface IAdminConfig {
+  _id?: ObjectId
+  aiModel: string
+  affectionBonus: number
+  jealousyBonus: number
+  trustBonus: number
+  updatedAt: Date
+}
+
+export interface IChangelog {
+  _id?: ObjectId
+  title: string
+  content: string
+  createdAt: Date
+}
+
+export interface ICharacterConfig {
+  _id?: ObjectId
+  type: CharacterType
+  gender: 'male' | 'female'
+  title: string
+  description: string
+  baseAffection: number
+  baseJealousy: number
+  baseTrust: number
+  systemPrompt: string
+  imageUrl: string
+  color: string
+  bgColor: string
+  borderColor: string
+  isActive: boolean
 }

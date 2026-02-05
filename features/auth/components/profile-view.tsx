@@ -6,6 +6,8 @@ import {
   UserMinus,
   ChevronRight,
   Loader2,
+  ShieldCheck,
+  FileText,
 } from 'lucide-react'
 import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
@@ -13,9 +15,12 @@ import { useTransitionRouter } from 'next-view-transitions'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { ChangelogSection } from '@/features/mypage/components/changelog-section'
 import { Header } from '@/shared/components/header/header'
 import { PageLayout } from '@/shared/components/layout/page-layout'
 import { ConfirmModal } from '@/shared/components/modal/confirm-modal'
+import { Modal } from '@/shared/components/modal/modal'
+import { Portal } from '@/shared/components/portal/portal'
 import { useModal } from '@/shared/hooks/use-modal'
 import { cn } from '@/shared/utils/cn'
 
@@ -24,6 +29,12 @@ export function ProfileView() {
   const { data: session, status } = useSession()
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const { isModalOpen, openModal, closeModal } = useModal()
+  const {
+    isModalOpen: isChangelogModalOpen,
+    dimRef: changelogDimRef,
+    openModal: openChangelogModal,
+    closeModal: closeChangelogModal,
+  } = useModal()
 
   if (status === 'loading') {
     return (
@@ -45,6 +56,8 @@ export function ProfileView() {
   }
 
   const { user } = session
+  // @ts-ignore
+  const isAdmin = user?.role === 'admin'
 
   const handleLogout = async () => {
     toast.success('로그아웃되었습니다.')
@@ -132,6 +145,49 @@ export function ProfileView() {
 
           {/* Actions Section */}
           <div className={cn('flex flex-col gap-4')}>
+            {isAdmin && (
+              <>
+                <h3
+                  className={cn(
+                    'px-2 text-xs font-bold tracking-wider text-gray-400 uppercase',
+                  )}
+                >
+                  관리 도구
+                </h3>
+                <div
+                  className={cn(
+                    'flex flex-col gap-2 overflow-hidden rounded-3xl bg-white p-2 shadow-sm ring-1 ring-black/5',
+                  )}
+                >
+                  <button
+                    onClick={() => router.push('/admin')}
+                    className={cn(
+                      'group flex items-center justify-between rounded-2xl p-3 transition-all hover:bg-blue-50/50 active:scale-[0.98]',
+                    )}
+                    type="button"
+                  >
+                    <div className={cn('flex items-center gap-3')}>
+                      <div
+                        className={cn(
+                          'flex size-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-white group-hover:shadow-sm',
+                        )}
+                      >
+                        <ShieldCheck className={cn('size-4')} />
+                      </div>
+                      <span className={cn('text-sm font-bold text-gray-700')}>
+                        관리자 페이지
+                      </span>
+                    </div>
+                    <ChevronRight
+                      className={cn(
+                        'size-4 text-gray-300 transition-transform group-hover:translate-x-0.5',
+                      )}
+                    />
+                  </button>
+                </div>
+              </>
+            )}
+
             <h3
               className={cn(
                 'px-2 text-xs font-bold tracking-wider text-gray-400 uppercase',
@@ -147,25 +203,25 @@ export function ProfileView() {
               <button
                 onClick={handleLogout}
                 className={cn(
-                  'group flex items-center justify-between rounded-2xl p-4 transition-all hover:bg-gray-50 active:scale-[0.98]',
+                  'group flex items-center justify-between rounded-2xl p-3 transition-all hover:bg-gray-50 active:scale-[0.98]',
                 )}
                 type="button"
               >
-                <div className={cn('flex items-center gap-4')}>
+                <div className={cn('flex items-center gap-3')}>
                   <div
                     className={cn(
-                      'flex size-11 items-center justify-center rounded-2xl bg-gray-50 text-gray-500 transition-colors group-hover:bg-white group-hover:shadow-sm',
+                      'flex size-9 items-center justify-center rounded-xl bg-gray-50 text-gray-500 transition-colors group-hover:bg-white group-hover:shadow-sm',
                     )}
                   >
-                    <LogOut className={cn('size-5')} />
+                    <LogOut className={cn('size-4')} />
                   </div>
-                  <span className={cn('text-base font-bold text-gray-700')}>
+                  <span className={cn('text-sm font-bold text-gray-700')}>
                     로그아웃
                   </span>
                 </div>
                 <ChevronRight
                   className={cn(
-                    'size-5 text-gray-300 transition-transform group-hover:translate-x-0.5',
+                    'size-4 text-gray-300 transition-transform group-hover:translate-x-0.5',
                   )}
                 />
               </button>
@@ -176,26 +232,65 @@ export function ProfileView() {
                 onClick={openModal}
                 disabled={isWithdrawing}
                 className={cn(
-                  'group flex items-center justify-between rounded-2xl p-4 transition-all hover:bg-red-50/50 active:scale-[0.98]',
+                  'group flex items-center justify-between rounded-2xl p-3 transition-all hover:bg-red-50/50 active:scale-[0.98]',
                   isWithdrawing && 'opacity-50',
                 )}
                 type="button"
               >
-                <div className={cn('flex items-center gap-4')}>
+                <div className={cn('flex items-center gap-3')}>
                   <div
                     className={cn(
-                      'flex size-11 items-center justify-center rounded-2xl bg-red-50 text-red-500 transition-colors group-hover:bg-white group-hover:shadow-sm',
+                      'flex size-9 items-center justify-center rounded-xl bg-red-50 text-red-500 transition-colors group-hover:bg-white group-hover:shadow-sm',
                     )}
                   >
-                    <UserMinus className={cn('size-5')} />
+                    <UserMinus className={cn('size-4')} />
                   </div>
-                  <span className={cn('text-base font-bold text-red-500')}>
+                  <span className={cn('text-sm font-bold text-red-500')}>
                     회원 탈퇴
                   </span>
                 </div>
                 <ChevronRight
                   className={cn(
-                    'size-5 text-red-200 transition-transform group-hover:translate-x-0.5',
+                    'size-4 text-red-200 transition-transform group-hover:translate-x-0.5',
+                  )}
+                />
+              </button>
+            </div>
+
+            <h3
+              className={cn(
+                'px-2 text-xs font-bold tracking-wider text-gray-400 uppercase',
+              )}
+            >
+              앱 정보
+            </h3>
+            <div
+              className={cn(
+                'flex flex-col gap-2 overflow-hidden rounded-3xl bg-white p-2 shadow-sm ring-1 ring-black/5',
+              )}
+            >
+              <button
+                onClick={openChangelogModal}
+                className={cn(
+                  'group flex items-center justify-between rounded-2xl p-3 transition-all hover:bg-gray-50 active:scale-[0.98]',
+                )}
+                type="button"
+              >
+                <div className={cn('flex items-center gap-3')}>
+                  <div
+                    className={cn(
+                      'flex size-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-white group-hover:shadow-sm',
+                    )}
+                  >
+                    <FileText className={cn('size-4')} />
+                  </div>
+                  <span className={cn('text-sm font-bold text-gray-700')}>
+                    변경 내역
+                  </span>
+                </div>
+                <ChevronRight
+                  className={cn(
+                    'size-4 text-gray-300 transition-transform group-hover:translate-x-0.5',
                   )}
                 />
               </button>
@@ -214,6 +309,17 @@ export function ProfileView() {
         isDestructive
         isLoading={isWithdrawing}
       />
+
+      <Portal isPortalOpen={isChangelogModalOpen}>
+        <Modal.Dim dimRef={changelogDimRef} onDimClick={closeChangelogModal}>
+          <Modal>
+            <Modal.Header text="변경 내역" onCloseClick={closeChangelogModal} />
+            <div className={cn('max-h-[70vh] overflow-y-auto p-4')}>
+              <ChangelogSection />
+            </div>
+          </Modal>
+        </Modal.Dim>
+      </Portal>
     </PageLayout>
   )
 }

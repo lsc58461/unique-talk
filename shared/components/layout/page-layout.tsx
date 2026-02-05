@@ -22,7 +22,7 @@ export function PageLayout({
     >
       <main
         className={cn(
-          'relative flex h-screen w-full max-w-[440px] flex-col overflow-hidden bg-white shadow-2xl',
+          'relative flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl sm:max-w-[440px]',
           className,
         )}
       >
