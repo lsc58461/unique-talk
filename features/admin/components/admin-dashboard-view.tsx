@@ -141,13 +141,6 @@ export function AdminDashboardView({ stats }: AdminDashboardViewProps) {
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold">대시보드</h2>
-          <p className="text-muted-foreground text-sm">
-            전체 서비스 현황을 한눈에 확인하세요.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {statCards.map((card) => (
             <Card key={card.label}>

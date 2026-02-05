@@ -199,23 +199,15 @@ export function AdminCharactersView() {
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">캐릭터 관리</h2>
-            <p className="text-muted-foreground text-sm">
-              각 캐릭터를 클릭하여 수정할 수 있습니다.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={handleResetDefaults}>
-              <RotateCcw className="mr-2 size-4" />
-              기본값 복원
-            </Button>
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <Plus className="mr-2 size-4" />
-              캐릭터 추가
-            </Button>
-          </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleResetDefaults}>
+            <RotateCcw className="mr-2 size-4" />
+            기본값 복원
+          </Button>
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            <Plus className="mr-2 size-4" />
+            캐릭터 추가
+          </Button>
         </div>
 
         <Card>

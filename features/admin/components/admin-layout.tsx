@@ -64,10 +64,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  const currentNavigation = useMemo(() => {
+  const currentPage = useMemo(() => {
     // 정확한 경로 매칭을 위해 대시보드는 정확히 일치할 때만
     if (pathname === '/admin') {
-      return '대시보드'
+      return navigation[0]
     }
     // 나머지는 경로 시작 부분으로 매칭 (긴 경로부터 확인)
     const sortedNavigation = [...navigation]
@@ -76,7 +76,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const matchedItem = sortedNavigation.find((item) =>
       pathname.startsWith(item.href),
     )
-    return matchedItem ? matchedItem.name : '대시보드'
+    return matchedItem || navigation[0]
   }, [pathname])
 
   const handleNavigate = () => {
@@ -243,9 +243,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 </SheetContent>
               </Sheet>
-              <h2 className="text-lg font-semibold md:text-xl">
-                {currentNavigation}
-              </h2>
+              <div>
+                <h2 className="text-lg font-semibold md:text-xl">
+                  {currentPage.name}
+                </h2>
+                <p className="text-muted-foreground hidden text-sm md:block">
+                  {currentPage.description}
+                </p>
+              </div>
             </div>
           </div>
         </header>

@@ -156,3 +156,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Recharts 차트 요소 포커스 스타일 제거 */
+.recharts-responsive-container g {
+  outline: none !important;
+}

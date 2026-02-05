@@ -84,13 +84,6 @@ export function AdminUsersView() {
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold">회원 관리</h2>
-          <p className="text-muted-foreground text-sm">
-            전체 회원 리스트 및 활동 내역을 확인합니다.
-          </p>
-        </div>
-
         <Card>
           <CardHeader>
             <CardTitle>전체 회원 목록</CardTitle>

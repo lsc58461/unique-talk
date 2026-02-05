@@ -56,6 +56,7 @@ export function AdminChangelogView() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<IChangelog | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const fetchChangelogs = async () => {
     try {
@@ -93,6 +94,7 @@ export function AdminChangelogView() {
       })
       if (res.ok) {
         toast.success('변경 내역이 등록되었습니다.')
+        setIsCreateModalOpen(false)
         setTitle('')
         setContent('')
         setType('feature')
@@ -191,70 +193,18 @@ export function AdminChangelogView() {
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold">변경 내역 관리</h2>
-          <p className="text-muted-foreground text-sm">
-            앱의 변경 내역을 등록하고 관리합니다.
-          </p>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => {
+              setTitle('')
+              setContent('')
+              setType('feature')
+              setIsCreateModalOpen(true)
+            }}
+          >
+            <Plus className="mr-2 size-4" />새 변경 내역 등록
+          </Button>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>새 변경 내역 등록</CardTitle>
-            <CardDescription>
-              사용자에게 표시될 변경 내역을 작성합니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="type">타입</Label>
-                <Select
-                  value={type}
-                  onValueChange={(
-                    value: 'feature' | 'improvement' | 'bugfix',
-                  ) => setType(value)}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="feature">신규 기능</SelectItem>
-                    <SelectItem value="improvement">개선</SelectItem>
-                    <SelectItem value="bugfix">버그 수정</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="title">제목</Label>
-                <Input
-                  id="title"
-                  placeholder="예: 새로운 캐릭터 추가"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="content">내용</Label>
-                <Textarea
-                  id="content"
-                  placeholder="변경 내역을 상세히 작성해주세요."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={5}
-                />
-              </div>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="self-end"
-              >
-                <Plus className="mr-2 size-4" />
-                {isSubmitting ? '등록 중...' : '등록하기'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
@@ -333,6 +283,73 @@ export function AdminChangelogView() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>새 변경 내역 등록</DialogTitle>
+            <DialogDescription>
+              사용자에게 표시될 변경 내역을 작성합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-type">타입</Label>
+              <Select
+                value={type}
+                onValueChange={(value: 'feature' | 'improvement' | 'bugfix') =>
+                  setType(value)
+                }
+              >
+                <SelectTrigger id="create-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="feature">신규 기능</SelectItem>
+                  <SelectItem value="improvement">개선</SelectItem>
+                  <SelectItem value="bugfix">버그 수정</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-title">제목</Label>
+              <Input
+                id="create-title"
+                placeholder="예: 새로운 캐릭터 추가"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-content">내용</Label>
+              <Textarea
+                id="create-content"
+                placeholder="변경 내역을 상세히 작성해주세요."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={5}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsCreateModalOpen(false)
+                setTitle('')
+                setContent('')
+                setType('feature')
+              }}
+            >
+              취소
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              <Plus className="mr-2 size-4" />
+              {isSubmitting ? '등록 중...' : '등록하기'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl">

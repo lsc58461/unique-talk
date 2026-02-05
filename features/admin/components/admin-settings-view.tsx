@@ -67,13 +67,7 @@ export function AdminSettingsView() {
   return (
     <AdminLayout>
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">시스템 설정</h2>
-            <p className="text-muted-foreground text-sm">
-              AI 모델 및 감정 보너스 계수를 설정합니다.
-            </p>
-          </div>
+        <div className="flex justify-end">
           <Button onClick={handleSave} disabled={isSaving} size="lg">
             <Save className="mr-2 size-4" />
             {isSaving ? '저장 중...' : '설정 저장'}
