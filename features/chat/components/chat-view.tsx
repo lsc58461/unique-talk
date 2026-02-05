@@ -105,7 +105,7 @@ export function ChatView({
   }
 
   return (
-    <div className={cn('flex h-full flex-col bg-white')}>
+    <div className={cn('flex h-dvh flex-col bg-white')}>
       <Header
         left={
           <div className={cn('flex items-center gap-3')}>
