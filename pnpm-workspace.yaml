@@ -3,4 +3,5 @@ ignoredBuiltDependencies:
   - unrs-resolver
 
 onlyBuiltDependencies:
+  - es5-ext
   - protobufjs
