@@ -33,7 +33,7 @@ export default function RootLayout({
     <ViewTransitions>
       <html lang="ko">
         <body
-          className={cn('antialiased h-screen overflow-hidden', geistSans.variable, geistMono.variable)}
+          className={cn('antialiased', geistSans.variable, geistMono.variable)}
         >
           <AuthProvider>
             {children}
