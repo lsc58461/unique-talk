@@ -8,6 +8,7 @@ import {
   Menu,
   Home,
   FileText,
+  ScrollText,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -44,6 +45,12 @@ const navigation = [
     description: '회원 정보 조회 및 역할 관리',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    name: '약관 관리',
+    description: '서비스 이용약관 및 개인정보 처리방침 관리',
+    href: '/admin/terms',
+    icon: ScrollText,
   },
   {
     name: '변경 내역',

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { ViewTransitions } from 'next-view-transitions'
 import { Toaster } from 'sonner'
 
+import { TermsConsentChecker } from '@/components/terms-consent-checker'
 import { AuthProvider } from '@/shared/components/auth-provider'
 import './globals.css'
 import { cn } from '@/shared/utils/cn'
@@ -34,7 +35,10 @@ export default function RootLayout({
         <body
           className={cn('antialiased', geistSans.variable, geistMono.variable)}
         >
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <TermsConsentChecker />
+          </AuthProvider>
           <Toaster
             position="top-center"
             richColors

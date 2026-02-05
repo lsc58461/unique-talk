@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { ChangelogSection } from '@/features/mypage/components/changelog-section'
+import { TermsConsentSection } from '@/features/mypage/components/terms-consent-section'
 import { Header } from '@/shared/components/header/header'
 import { PageLayout } from '@/shared/components/layout/page-layout'
 import { ConfirmModal } from '@/shared/components/modal/confirm-modal'
@@ -106,7 +107,7 @@ export function ProfileView() {
           center={<Header.Title>마이페이지</Header.Title>}
         />
 
-        <div className={cn('flex flex-1 flex-col gap-10 p-6')}>
+        <div className={cn('flex flex-1 flex-col gap-10 overflow-y-auto p-6')}>
           {/* User Profile Section */}
           <div className={cn('flex flex-col items-center gap-5 pt-10 pb-4')}>
             <div
@@ -256,6 +257,15 @@ export function ProfileView() {
                 />
               </button>
             </div>
+
+            <h3
+              className={cn(
+                'px-2 text-xs font-bold tracking-wider text-gray-400 uppercase',
+              )}
+            >
+              약관 동의 정보
+            </h3>
+            <TermsConsentSection />
 
             <h3
               className={cn(

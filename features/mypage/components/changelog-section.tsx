@@ -5,13 +5,7 @@ import { Sparkles, Wrench, Bug, Clock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { IChangelog } from '@/shared/types/database'
 import { cn } from '@/shared/utils/cn'
 
